@@ -1,49 +1,13 @@
 package main
 
 import (
-	"bufio"
-	"io"
 	"log"
 	"math"
-	"os"
 	"strconv"
 	"strings"
+
+	c "github.com/VorpalCode/aoc2016/common"
 )
-
-func processStdin() string {
-	var output string
-	r := bufio.NewReader(os.Stdin)
-	buf := make([]byte, 0, 4*1024)
-
-	for {
-		n, err := r.Read(buf[:cap(buf)])
-		buf = buf[:n]
-		if n == 0 {
-			if err == nil {
-				continue
-			}
-			if err == io.EOF {
-				break
-			}
-			log.Fatal(err)
-		}
-
-		if err != nil && err != io.EOF {
-			log.Fatal(err)
-		}
-
-		output = string(buf)
-	}
-	debug("Buf = %v", output)
-
-	return output
-}
-
-func debug(format string, a ...interface{}) {
-	if false {
-		log.Printf(format, a)
-	}
-}
 
 func sliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
@@ -57,21 +21,15 @@ func sliceIndex(limit int, predicate func(i int) bool) int {
 type direction string
 
 func (d direction) turn(way string) direction {
+	var newInt int
 	compass := [4]direction{"N", "E", "S", "W"}
 	current := sliceIndex(len(compass), func(i int) bool { return compass[i] == d })
-	var newInt int
+	turns := map[string]int{"L": -1, "R": 1}
 
-	if way == "L" {
-		newInt = (current - 1) % len(compass)
-		if newInt < 0 {
-			newInt = len(compass) + newInt
-		}
-	} else if way == "R" {
-		newInt = (current + 1) % len(compass)
-	}
+	newInt = int(math.Abs(float64(len(compass)+current+turns[way]))) % len(compass)
 
 	d = compass[newInt]
-	debug("newWay = %v", d)
+	c.Debug("newWay = %v", d)
 	return d
 }
 
@@ -80,10 +38,19 @@ type movement struct {
 	distance int
 }
 
-type position struct {
-	direction
+func newMovementFromStr(str string) movement {
+	dist, _ := strconv.Atoi(string([]rune(str)[1:]))
+	return movement{turn: string([]rune(str)[0]), distance: dist}
+}
+
+type coords struct {
 	xPos int
 	yPos int
+}
+
+type position struct {
+	direction
+	coords
 }
 
 func (p position) step(m movement) position {
@@ -108,17 +75,16 @@ func (p position) distance() float64 {
 }
 
 func main() {
-	moveStrs := strings.Split(strings.TrimSpace(processStdin()), ", ")
-	curPos := position{direction("N"), 0, 0}
+	moveStrs := strings.Split(c.ProcessStdin()[0], ", ")
+	curPos := position{direction("N"), coords{0, 0}}
 
 	for _, moveStr := range moveStrs {
-		dist, _ := strconv.Atoi(string([]rune(moveStr)[1:]))
-		move := movement{turn: string([]rune(moveStr)[0]), distance: dist}
+		move := newMovementFromStr(moveStr)
 		curPos = curPos.step(move)
 
-		debug("move = %v", move)
-		debug("cP = %v", curPos)
-		debug("----------")
+		c.Debug("move = %v", move)
+		c.Debug("cP = %v", curPos)
+		c.Debug("----------")
 	}
 
 	log.Printf("x = %v / y = %v", curPos.xPos, curPos.yPos)
