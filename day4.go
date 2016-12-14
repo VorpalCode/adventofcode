@@ -1,32 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"log"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	c "github.com/VorpalCode/aoc2016/common"
 )
-
-func processStdin() []string {
-	var output []string
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		output = append(output, scanner.Text())
-	}
-
-	// log.Printf("lines: %v\n%v", len(output), output)
-
-	return output
-}
-
-func debug(format string, a ...interface{}) {
-	if false {
-		log.Printf(format, a)
-	}
-}
 
 type room struct {
 	code      string
@@ -65,7 +47,7 @@ func (r room) top5() string {
 	}
 
 	sort.Sort(sort.Reverse(sort.IntSlice(counts)))
-	debug("%v / %v", topStrings, counts)
+	c.Debug("%v / %v", topStrings, counts)
 
 	for _, k := range counts {
 		letters := topStrings[k]
@@ -78,17 +60,17 @@ func (r room) top5() string {
 		}
 	}
 	rslt := strings.Join(ordered[0:5], ``)
-	debug("%v - %T", rslt, rslt)
+	c.Debug("%v - %T", rslt, rslt)
 	return rslt
 }
 
 func main() {
 	m := make(map[bool]int, 2)
-	for _, str := range processStdin() {
+	for _, str := range c.ProcessStdin() {
 		r := newRoomFromStr(str)
 		m[r.top5() == r.checksum] += r.sector
 
-		debug("-----------")
+		c.Debug("-----------")
 	}
 	log.Printf("%v", m)
 }
